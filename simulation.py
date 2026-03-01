@@ -1,35 +1,33 @@
-# simulation.py
+# router_standard.py
 
-from experts import create_experts
-from router_standard import StandardRouter
-from router_functional import FunctionalRouter
-from metrics import compute_std, compute_entropy, collapse_ratio
+import random
 
 
-def run_simulation(router_class, steps=100000):
-    experts = create_experts(64)
-    router = router_class(experts)
+class StandardRouter:
+    def __init__(self, experts):
+        self.experts = experts
 
-    for i in range(steps):
-        token = i  # dummy token
-        router.route(token)
+        # collapse bias configuration
+        self.bias_probability = 0.7
+        self.biased_group_size = 8
 
-    std = compute_std(experts)
-    entropy = compute_entropy(experts)
-    collapse = collapse_ratio(experts)
+    def route(self, token):
+        """
+        Simulated collapse scenario.
 
-    return {
-        "std_dev": std,
-        "entropy": entropy,
-        "collapse_ratio": collapse
-    }
+        70% of tokens go to first 8 experts.
+        30% distributed among remaining experts.
 
+        This mimics expert dominance typical for real MoE collapse.
+        """
 
-if __name__ == "__main__":
-    print("Running Standard Router...")
-    standard_metrics = run_simulation(StandardRouter)
-    print("Standard:", standard_metrics)
+        biased_group = self.experts[:self.biased_group_size]
+        other_group = self.experts[self.biased_group_size:]
 
-    print("\nRunning Functional Router...")
-    functional_metrics = run_simulation(FunctionalRouter)
-    print("Functional:", functional_metrics)
+        if random.random() < self.bias_probability:
+            expert = random.choice(biased_group)
+        else:
+            expert = random.choice(other_group)
+
+        expert.activate()
+        return expert
