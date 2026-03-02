@@ -29,21 +29,48 @@ def compute_entropy(experts):
     return entropy
 
 
-def collapse_ratio(experts, threshold_ratio=0.8):
+def effective_expert_count(experts):
     """
-    Measures how many experts carry 80% of load.
-    Lower is worse (collapse).
+    Perplexity-style measure:
+    2^entropy
+    Maximum = number of experts
     """
+
+    entropy = compute_entropy(experts)
+    return 2 ** entropy
+
+
+def gini_coefficient(experts):
+    """
+    Measures inequality.
+    0 = perfect equality
+    1 = maximal inequality
+    """
+
+    loads = sorted(compute_distribution(experts))
+    n = len(loads)
+    total = sum(loads)
+
+    if total == 0:
+        return 0
+
+    cumulative = 0
+    for i, load in enumerate(loads, 1):
+        cumulative += i * load
+
+    gini = (2 * cumulative) / (n * total) - (n + 1) / n
+    return gini
+
+
+def top_k_share(experts, k=4):
+    """
+    Fraction of total load carried by top-k experts.
+    """
+
     loads = sorted(compute_distribution(experts), reverse=True)
     total = sum(loads)
 
-    cumulative = 0
-    count = 0
+    if total == 0:
+        return 0
 
-    for load in loads:
-        cumulative += load
-        count += 1
-        if cumulative >= threshold_ratio * total:
-            break
-
-    return count / len(loads)
+    return sum(loads[:k]) / total
