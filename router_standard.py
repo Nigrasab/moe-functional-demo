@@ -4,21 +4,25 @@ import random
 
 
 class StandardRouter:
-    def __init__(self, experts):
+    def __init__(self, experts, alpha=1.2):
+        """
+        alpha controls strength of positive feedback:
+
+        alpha = 0   -> uniform routing
+        alpha = 1   -> linear preference
+        alpha > 1   -> strong collapse tendency
+        """
+
         self.experts = experts
-        self.epsilon = 1e-6  # small value to avoid zero probability
+        self.alpha = alpha
+        self.epsilon = 1e-6
 
     def route(self, token):
-        """
-        Popularity-based routing (positive feedback).
-
-        Probability of selecting an expert grows with its activation count.
-        This simulates real softmax-based MoE collapse behaviour.
-        """
-
         weights = []
+
         for e in self.experts:
-            weights.append(e.activation_count + self.epsilon)
+            weight = (e.activation_count + 1) ** self.alpha
+            weights.append(weight + self.epsilon)
 
         total = sum(weights)
         r = random.random() * total
@@ -30,7 +34,6 @@ class StandardRouter:
                 expert.activate()
                 return expert
 
-        # fallback
         expert = self.experts[-1]
         expert.activate()
         return expert
