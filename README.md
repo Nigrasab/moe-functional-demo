@@ -1,43 +1,76 @@
 # MoE Functional Demo
 
-Minimal experimental framework to test **functional differentiation in Mixture of Experts (MoE)** architectures.
-
-## Goal
-
-To compare two routing strategies:
-
-1. Standard probabilistic / similarity-based routing.
-2. Functional-complementary routing based on:
-   - Fixed complementary pairs
-   - Integrity metric
-   - Entropy-aware routing
-
-The objective is to test whether architectural functional uniqueness reduces expert collapse without heavy regularization.
+Minimal experimental demonstration of expert collapse in Mixture-of-Experts (MoE) systems and structural resistance via functional routing.
 
 ---
 
-## Core Hypothesis
+## Problem
 
-Traditional MoE:
-- Experts are weight-different but functionally identical.
-- Collapse emerges when a few experts dominate routing.
+Mixture-of-Experts architectures suffer from expert collapse when routing probabilities are amplified by positive feedback.
 
-Functional MoE:
-- Experts are structurally unique.
-- Each expert has a complementary pair.
-- Router selects by complementarity, not similarity.
-- Built-in integrity prevents atrophy.
+Standard routing with reinforcement:
 
----
+Pᵢ ∝ (activationᵢ + 1)^α
 
-## MVP Scope
-
-- 64 unique experts
-- 32 fixed complementary pairs
-- Two router implementations
-- 100k token simulation
-- Collapse and entropy metrics
+As α increases, a nonlinear phase transition occurs:
+- A small subset of experts dominates.
+- Effective expert count drops.
+- Load distribution becomes highly unequal.
 
 ---
 
-## Structure
+## Experiment
+
+64 experts  
+30,000 routing steps  
+
+Two routing strategies compared:
+
+1. Standard popularity-based routing
+2. Functional load-balanced routing
+
+Metrics:
+- Entropy
+- Effective expert count (2^entropy)
+- Gini coefficient
+- Top-4 load share
+
+---
+
+## Representative Result
+
+### Standard Routing
+
+- Effective experts ≈ 16.7
+- Gini ≈ 0.78
+- Top-4 share ≈ 0.51
+
+More than 50% of load is concentrated in 4 experts.
+
+### Functional Routing
+
+- Effective experts ≈ 64
+- Gini ≈ 0.001
+- Top-4 share ≈ 0.0625
+
+Uniform distributed activation preserved.
+
+---
+
+## Conclusion
+
+Popularity-amplified routing structurally collapses under sufficient feedback strength.
+
+Functional routing with structural differentiation maintains distributed activation without external regularization.
+
+---
+
+## Reproducibility
+
+Run:
+
+
+python simulation.py
+
+
+The script performs an alpha sweep and prints all metrics.
